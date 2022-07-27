@@ -26,9 +26,6 @@ def ReadWaveformDataDemo():
     # This is the maximum number of bytes expected for 1 read. 1024 is plenty for a single text command
     COMMAND_BUFFER_SIZE = 1024 # Increase if many return commands are expected
 
-    # Declare buffer size for reading from TCP waveform socket.
-    # This is the maximum number of bytes expected for 1 read
-
     # There will be some TCP lag in both starting and stopping acquisition, so the exact number of data blocks may vary slightly.
     # At 30 kHz with 1 channel, 1 second of wideband waveform data is 181,420 byte. See 'Calculations for accurate parsing' for more details
     # To allow for some TCP lag in stopping acquisition resulting in slightly more than 1 second of data, 200000 should be a safe buffer size
@@ -71,8 +68,8 @@ def ReadWaveformDataDemo():
     time.sleep(0.1)
 
     # Send TCP commands to set up TCP Data Output Enabled for wide
-    # band of channel A-010
-    scommand.sendall(b'set a-010.tcpdataoutputenabled true')
+    # band of channel A-001
+    scommand.sendall(b'set a-001.tcpdataoutputenabled true')
     time.sleep(0.1)
 
     # Calculations for accurate parsing
@@ -128,7 +125,7 @@ def ReadWaveformDataDemo():
     # If using matplotlib to plot is not desired, the following plot lines can be removed.
     # Data is still accessible at this point in the amplifierTimestamps and amplifierData
     plt.plot(amplifierTimestamps, amplifierData)
-    plt.title('A-010 Amplifier Data')
+    plt.title('A-001 Amplifier Data')
     plt.xlabel('Time (s)')
     plt.ylabel('Voltage (uV)')
     plt.show()
