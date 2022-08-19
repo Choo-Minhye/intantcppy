@@ -150,10 +150,10 @@ def ReadWaveformDataDemo():
     scommand.sendall(b'set runmode stop')
 
     # Read waveform data
-    rawData = swaveform.recv(102800)
+    rawData = swaveform.recv(WAVEFORM_BUFFER_SIZE)
     spikeArray = sspikeform.recv(1024)
     
-    print(len(rawData))
+    # print(len(rawData))
     # if len(rawData) % waveformBytesPerBlock != 0:
     #     raise Exception('An unexpected amount of data arrived that is not an integer multiple of the expected data size per block')
     # numBlocks = int(len(rawData) / waveformBytesPerBlock)
@@ -162,12 +162,15 @@ def ReadWaveformDataDemo():
     spikeIndex = 0
     amplifierTimestamps = [] # List used to contain scaled timestamp values in seconds
     amplifierData = [] # List used to contain scaled amplifier data in microVolts
-    for block in range(100):
+    numBlocks = int(len(rawData) / waveformBytesPerBlock)
+
+    for block in range(numBlocks):
         # Expect 4 bytes to be TCP Magic Number as uint32.
         # If not what's expected, raise an exception.
         magicNumber, rawIndex = readUint32(rawData, rawIndex)
         if magicNumber != 0x2ef07a08:
             raise Exception('Error... magic number incorrect')
+
         # Each block should contain 128 frames of data - process each
         # of these one-by-one
         for frame in range(framesPerBlock):
@@ -176,30 +179,31 @@ def ReadWaveformDataDemo():
             
             # Multiply by 'timestep' to convert timestamp to seconds
             amplifierTimestamps.append(rawTimestamp * timestep)
+
             # Expect 2 bytes of wideband data.
             rawSample, rawIndex = readUint16(rawData, rawIndex)
             
             # Scale this sample to convert to microVolts
             amplifierData.append(0.195 * (rawSample - 32768))
+    
+    plt.plot(amplifierTimestamps, amplifierData, label= 'waveform with spike',zorder=0)
 
     
-    # If using matplotlib to plot is not desired, the following plot lines can be removed.
-    # Data is still accessible at this point in the amplifierTimestamps and amplifierData
-    plt.plot(amplifierTimestamps, amplifierData)
-    plt.title('A-010 Amplifier Data')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Voltage (uV)')
-    
+    print("whole Timestamps len : " + str(len(amplifierTimestamps)))
     # % Each spike chunk contains 4 bytes for magic number, 5 bytes for native
     # % channel name, 4 bytes for timestamp, and 1 byte for id. Total: 14 bytes
     bytesPerSpikeChunk = 14;
+    spikeTimestamps = []
+    rtimestamps = []
+    spikedata = []
     spikeBytesToRead = len(spikeArray)
-    print(spikeBytesToRead)
+    print("spikeBytesToRead : " + str(spikeBytesToRead))
     chunksToRead = int(spikeBytesToRead / bytesPerSpikeChunk);
-    print(chunksToRead)
+    print("chunksToRead : " + str(chunksToRead))
     if chunksToRead > 0 :
         for chunk in range(chunksToRead) :
             magicNumber, spikeIndex = readUint32(spikeArray, spikeIndex)
+            print("spikeIndex : " + str(spikeIndex))
             if magicNumber != 0x3ae2710f:
                 raise Exception('Error... magic number incorrect')
                 print(chunk)
@@ -207,20 +211,30 @@ def ReadWaveformDataDemo():
             nativeChannelName, spikeIndex = read5char(spikeArray, spikeIndex)
             singleTimestamp, spikeIndex = readUint32(spikeArray, spikeIndex)
             singleID, spikeIndex = readUint8(spikeArray, spikeIndex)
-            print(nativeChannelName)
-            print(singleTimestamp)
-            print(singleID)
-  
-
-
-          
-                
             
-
-
-
-
-
+            timestamp = float(singleTimestamp) * timestep
+            print("nativeChannelName : " + str(nativeChannelName))
+            print("singleTimestamp : " + str(singleTimestamp))
+            # print(amplifierData[singleTimestamp])
+            # print(singleID)
+            if singleTimestamp < len(amplifierTimestamps) :
+                spikeTimestamps.append(singleTimestamp)
+                rtimestamps.append(float(singleTimestamp) * timestep)
+                spikedata.append(amplifierData[singleTimestamp])
+    
+    # If using matplotlib to plot is not desired, the following plot lines can be removed.
+    # Data is still accessible at this point in the amplifierTimestamps and amplifierData
+        mark = [amplifierTimestamps.index(i) for i in rtimestamps]
+        plt.plot(rtimestamps,[amplifierData[i] for i in mark], ls="", marker="o", label="points",zorder=1)
+    else :
+        print("no spike on this period")
+    
+    plt.title('A-010 Amplifier Data')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Voltage (uV)')
+    
+    
+    
 
 
 
@@ -231,3 +245,5 @@ def ReadWaveformDataDemo():
 ReadWaveformDataDemo()
 
 plt.show()
+
+
