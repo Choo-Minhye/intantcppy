@@ -146,11 +146,13 @@ def ReadWaveformDataDemo():
 
     # Run controller for 1 second
     scommand.sendall(b'set runmode run')
-    time.sleep(1)
+    time.sleep(3)
     scommand.sendall(b'set runmode stop')
 
     # Read waveform data
-    rawData = swaveform.recv(WAVEFORM_BUFFER_SIZE)
+    
+    rawData = swaveform.recv(20000000)
+    # rawData = swaveform.recv(WAVEFORM_BUFFER_SIZE)
     spikeArray = sspikeform.recv(1024)
     
     # print(len(rawData))
