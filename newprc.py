@@ -234,6 +234,22 @@ def ReadWaveformDataDemo():
     plt.title('A-010 Amplifier Data')
     plt.xlabel('Time (s)')
     plt.ylabel('Voltage (uV)')
+    plt.show()
+    
+        
+    
+    for i in range(len(mark)) :
+        # spike_arr = []
+        spike_arr_val = []
+        plt.title('spike plot_' + str(i) )
+        plt.xlabel('Time (s)')
+        plt.ylabel('Voltage (uV)')
+        spike_arr=amplifierTimestamps[spikeTimestamps[i]-50:spikeTimestamps[i]+50]
+        spike_mark = [amplifierTimestamps.index(i) for i in spike_arr]
+        plt.plot(spike_arr, [amplifierData[i] for i in spike_mark])
+        plt.show()
+        
+
     
     
     
@@ -246,6 +262,5 @@ def ReadWaveformDataDemo():
 
 ReadWaveformDataDemo()
 
-plt.show()
 
 
